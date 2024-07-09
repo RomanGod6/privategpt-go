@@ -5,7 +5,7 @@ FastAPI- Private GPT
 
 API version: 0.1.0
 */
-package openapi
+package sdk
 
 import (
 	"bytes"

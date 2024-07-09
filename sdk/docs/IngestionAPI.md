@@ -29,14 +29,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
 	docId := "docId_example" // string | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.IngestionAPI.DeleteIngestedV1IngestDocIdDelete(context.Background(), docId).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `IngestionAPI.DeleteIngestedV1IngestDocIdDelete``: %v\n", err)
@@ -99,14 +99,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
 	file := os.NewFile(1234, "some_file") // *os.File | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.IngestionAPI.IngestFileV1IngestFilePost(context.Background()).File(file).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `IngestionAPI.IngestFileV1IngestFilePost``: %v\n", err)
@@ -165,14 +165,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
-	ingestTextBody := *openapiclient.NewIngestTextBody("FileName_example", "Text_example") // IngestTextBody | 
+	ingestTextBody := *sdk.NewIngestTextBody("FileName_example", "Text_example") // IngestTextBody | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.IngestionAPI.IngestTextV1IngestTextPost(context.Background()).IngestTextBody(ingestTextBody).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `IngestionAPI.IngestTextV1IngestTextPost``: %v\n", err)
@@ -231,14 +231,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
 	file := os.NewFile(1234, "some_file") // *os.File | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.IngestionAPI.IngestV1IngestPost(context.Background()).File(file).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `IngestionAPI.IngestV1IngestPost``: %v\n", err)
@@ -297,13 +297,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.IngestionAPI.ListIngestedV1IngestListGet(context.Background()).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `IngestionAPI.ListIngestedV1IngestListGet``: %v\n", err)

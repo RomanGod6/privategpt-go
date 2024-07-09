@@ -25,14 +25,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
-	embeddingsBody := *openapiclient.NewEmbeddingsBody(*openapiclient.NewInput()) // EmbeddingsBody | 
+	embeddingsBody := *sdk.NewEmbeddingsBody(*sdk.NewInput()) // EmbeddingsBody | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.EmbeddingsAPI.EmbeddingsGenerationV1EmbeddingsPost(context.Background()).EmbeddingsBody(embeddingsBody).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `EmbeddingsAPI.EmbeddingsGenerationV1EmbeddingsPost``: %v\n", err)

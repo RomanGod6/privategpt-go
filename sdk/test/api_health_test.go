@@ -5,21 +5,21 @@ Testing HealthAPIService
 
 */
 
-package openapi
+package sdk
 
 import (
 	"context"
 	"testing"
 
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_openapi_HealthAPIService(t *testing.T) {
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 
 	t.Run("Test HealthAPIService HealthHealthGet", func(t *testing.T) {
 

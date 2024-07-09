@@ -26,14 +26,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
-	chatBody := *openapiclient.NewChatBody([]openapiclient.OpenAIMessage{*openapiclient.NewOpenAIMessage("Content_example")}) // ChatBody | 
+	chatBody := *sdk.NewChatBody([]sdk.OpenAIMessage{*sdk.NewOpenAIMessage("Content_example")}) // ChatBody | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.ContextualCompletionsAPI.ChatCompletionV1ChatCompletionsPost(context.Background()).ChatBody(chatBody).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `ContextualCompletionsAPI.ChatCompletionV1ChatCompletionsPost``: %v\n", err)
@@ -92,14 +92,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
+	sdk "github.com/RomanGod6/privategpt-go/sdk"
 )
 
 func main() {
-	completionsBody := *openapiclient.NewCompletionsBody("Prompt_example") // CompletionsBody | 
+	completionsBody := *sdk.NewCompletionsBody("Prompt_example") // CompletionsBody | 
 
-	configuration := openapiclient.NewConfiguration()
-	apiClient := openapiclient.NewAPIClient(configuration)
+	configuration := sdk.NewConfiguration()
+	apiClient := sdk.NewAPIClient(configuration)
 	resp, r, err := apiClient.ContextualCompletionsAPI.PromptCompletionV1CompletionsPost(context.Background()).CompletionsBody(completionsBody).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `ContextualCompletionsAPI.PromptCompletionV1CompletionsPost``: %v\n", err)
