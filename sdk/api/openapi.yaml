@@ -1,0 +1,942 @@
+openapi: 3.1.0
+info:
+  title: FastAPI- Private GPT
+  version: 0.1.0
+servers:
+- url: /
+paths:
+  /v1/completions:
+    post:
+      description: |-
+        We recommend most users use our Chat completions API.
+
+        Given a prompt, the model will return one predicted completion.
+
+        Optionally include a `system_prompt` to influence the way the LLM answers.
+
+        If `use_context`
+        is set to `true`, the model will use context coming from the ingested documents
+        to create the response. The documents being used can be filtered using the
+        `context_filter` and passing the document IDs to be used. Ingested documents IDs
+        can be found using `/ingest/list` endpoint. If you want all ingested documents to
+        be used, remove `context_filter` altogether.
+
+        When using `'include_sources': true`, the API will return the source Chunks used
+        to create the response, which come from the context provided.
+
+        When using `'stream': true`, the API will return data chunks following [OpenAI's
+        streaming model](https://platform.openai.com/docs/api-reference/chat/streaming):
+        ```
+        {"id":"12345","object":"completion.chunk","created":1694268190,
+        "model":"private-gpt","choices":[{"index":0,"delta":{"content":"Hello"},
+        "finish_reason":null}]}
+        ```
+      operationId: prompt_completion_v1_completions_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionsBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompletion'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Completion
+      tags:
+      - Contextual Completions
+      x-fern-streaming:
+        stream-condition: stream
+        response:
+          $ref: '#/components/schemas/OpenAICompletion'
+        response-stream:
+          $ref: '#/components/schemas/OpenAICompletion'
+  /v1/chat/completions:
+    post:
+      description: |-
+        Given a list of messages comprising a conversation, return a response.
+
+        Optionally include an initial `role: system` message to influence the way
+        the LLM answers.
+
+        If `use_context` is set to `true`, the model will use context coming
+        from the ingested documents to create the response. The documents being used can
+        be filtered using the `context_filter` and passing the document IDs to be used.
+        Ingested documents IDs can be found using `/ingest/list` endpoint. If you want
+        all ingested documents to be used, remove `context_filter` altogether.
+
+        When using `'include_sources': true`, the API will return the source Chunks used
+        to create the response, which come from the context provided.
+
+        When using `'stream': true`, the API will return data chunks following [OpenAI's
+        streaming model](https://platform.openai.com/docs/api-reference/chat/streaming):
+        ```
+        {"id":"12345","object":"completion.chunk","created":1694268190,
+        "model":"private-gpt","choices":[{"index":0,"delta":{"content":"Hello"},
+        "finish_reason":null}]}
+        ```
+      operationId: chat_completion_v1_chat_completions_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompletion'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Chat Completion
+      tags:
+      - Contextual Completions
+      x-fern-streaming:
+        stream-condition: stream
+        response:
+          $ref: '#/components/schemas/OpenAICompletion'
+        response-stream:
+          $ref: '#/components/schemas/OpenAICompletion'
+  /v1/chunks:
+    post:
+      description: |-
+        Given a `text`, returns the most relevant chunks from the ingested documents.
+
+        The returned information can be used to generate prompts that can be
+        passed to `/completions` or `/chat/completions` APIs. Note: it is usually a very
+        fast API, because only the Embeddings model is involved, not the LLM. The
+        returned information contains the relevant chunk `text` together with the source
+        `document` it is coming from. It also contains a score that can be used to
+        compare different results.
+
+        The max number of chunks to be returned is set using the `limit` param.
+
+        Previous and next chunks (pieces of text that appear right before or after in the
+        document) can be fetched by using the `prev_next_chunks` field.
+
+        The documents being used can be filtered using the `context_filter` and passing
+        the document IDs to be used. Ingested documents IDs can be found using
+        `/ingest/list` endpoint. If you want all ingested documents to be used,
+        remove `context_filter` altogether.
+      operationId: chunks_retrieval_v1_chunks_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChunksBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunksResponse'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Chunks Retrieval
+      tags:
+      - Context Chunks
+  /v1/ingest:
+    post:
+      deprecated: true
+      description: |-
+        Ingests and processes a file.
+
+        Deprecated. Use ingest/file instead.
+      operationId: ingest_v1_ingest_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_ingest_v1_ingest_post'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Ingest
+      tags:
+      - Ingestion
+  /v1/ingest/file:
+    post:
+      description: |-
+        Ingests and processes a file, storing its chunks to be used as context.
+
+        The context obtained from files is later used in
+        `/chat/completions`, `/completions`, and `/chunks` APIs.
+
+        Most common document
+        formats are supported, but you may be prompted to install an extra dependency to
+        manage a specific file type.
+
+        A file can generate different Documents (for example a PDF generates one Document
+        per page). All Documents IDs are returned in the response, together with the
+        extracted Metadata (which is later used to improve context retrieval). Those IDs
+        can be used to filter the context used to create responses in
+        `/chat/completions`, `/completions`, and `/chunks` APIs.
+      operationId: ingest_file_v1_ingest_file_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_ingest_file_v1_ingest_file_post'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Ingest File
+      tags:
+      - Ingestion
+  /v1/ingest/text:
+    post:
+      description: |-
+        Ingests and processes a text, storing its chunks to be used as context.
+
+        The context obtained from files is later used in
+        `/chat/completions`, `/completions`, and `/chunks` APIs.
+
+        A Document will be generated with the given text. The Document
+        ID is returned in the response, together with the
+        extracted Metadata (which is later used to improve context retrieval). That ID
+        can be used to filter the context used to create responses in
+        `/chat/completions`, `/completions`, and `/chunks` APIs.
+      operationId: ingest_text_v1_ingest_text_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestTextBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Ingest Text
+      tags:
+      - Ingestion
+  /v1/ingest/list:
+    get:
+      description: |-
+        Lists already ingested Documents including their Document ID and metadata.
+
+        Those IDs can be used to filter the context used to create responses
+        in `/chat/completions`, `/completions`, and `/chunks` APIs.
+      operationId: list_ingested_v1_ingest_list_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+          description: Successful Response
+      summary: List Ingested
+      tags:
+      - Ingestion
+  /v1/ingest/{doc_id}:
+    delete:
+      description: |-
+        Delete the specified ingested Document.
+
+        The `doc_id` can be obtained from the `GET /ingest/list` endpoint.
+        The document will be effectively deleted from your storage context.
+      operationId: delete_ingested_v1_ingest__doc_id__delete
+      parameters:
+      - explode: false
+        in: path
+        name: doc_id
+        required: true
+        schema:
+          title: Doc Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Delete Ingested
+      tags:
+      - Ingestion
+  /v1/embeddings:
+    post:
+      description: |-
+        Get a vector representation of a given input.
+
+        That vector representation can be easily consumed
+        by machine learning models and algorithms.
+      operationId: embeddings_generation_v1_embeddings_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingsBody'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingsResponse'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Embeddings Generation
+      tags:
+      - Embeddings
+  /health:
+    get:
+      description: Return ok if the system is up.
+      operationId: health_health_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+          description: Successful Response
+      summary: Health
+      tags:
+      - Health
+components:
+  schemas:
+    Body_ingest_file_v1_ingest_file_post:
+      properties:
+        file:
+          format: binary
+          title: File
+          type: string
+      required:
+      - file
+      title: Body_ingest_file_v1_ingest_file_post
+    Body_ingest_v1_ingest_post:
+      properties:
+        file:
+          format: binary
+          title: File
+          type: string
+      required:
+      - file
+      title: Body_ingest_v1_ingest_post
+    ChatBody:
+      example:
+        context_filter:
+          docs_ids:
+          - docs_ids
+          - docs_ids
+        stream: false
+        messages:
+        - role: user
+          content: content
+        - role: user
+          content: content
+        include_sources: true
+        use_context: false
+      properties:
+        messages:
+          items:
+            $ref: '#/components/schemas/OpenAIMessage'
+          type: array
+        use_context:
+          default: false
+          title: Use Context
+          type: boolean
+        context_filter:
+          $ref: '#/components/schemas/ContextFilter'
+        include_sources:
+          default: true
+          title: Include Sources
+          type: boolean
+        stream:
+          default: false
+          title: Stream
+          type: boolean
+      required:
+      - messages
+      title: ChatBody
+    Chunk:
+      example:
+        score: 6.027456183070403
+        document:
+          doc_metadata: "{}"
+          doc_id: doc_id
+          object: ""
+        next_texts:
+        - next_texts
+        - next_texts
+        text: text
+        previous_texts:
+        - previous_texts
+        - previous_texts
+        object: ""
+      properties:
+        object: {}
+        score:
+          title: Score
+          type: number
+        document:
+          $ref: '#/components/schemas/IngestedDoc'
+        text:
+          title: Text
+          type: string
+        previous_texts:
+          items:
+            type: string
+          nullable: true
+        next_texts:
+          items:
+            type: string
+          nullable: true
+      required:
+      - document
+      - object
+      - score
+      - text
+      title: Chunk
+    ChunksBody:
+      example:
+        context_filter:
+          docs_ids:
+          - docs_ids
+          - docs_ids
+        prev_next_chunks: 6
+        limit: 0
+        text: text
+      properties:
+        text:
+          title: Text
+          type: string
+        context_filter:
+          $ref: '#/components/schemas/ContextFilter'
+        limit:
+          default: 10
+          title: Limit
+          type: integer
+        prev_next_chunks:
+          default: 0
+          title: Prev Next Chunks
+          type: integer
+      required:
+      - text
+      title: ChunksBody
+    ChunksResponse:
+      example:
+        data:
+        - score: 6.027456183070403
+          document:
+            doc_metadata: "{}"
+            doc_id: doc_id
+            object: ""
+          next_texts:
+          - next_texts
+          - next_texts
+          text: text
+          previous_texts:
+          - previous_texts
+          - previous_texts
+          object: ""
+        - score: 6.027456183070403
+          document:
+            doc_metadata: "{}"
+            doc_id: doc_id
+            object: ""
+          next_texts:
+          - next_texts
+          - next_texts
+          text: text
+          previous_texts:
+          - previous_texts
+          - previous_texts
+          object: ""
+        model: ""
+        object: ""
+      properties:
+        object: {}
+        model: {}
+        data:
+          items:
+            $ref: '#/components/schemas/Chunk'
+          type: array
+      required:
+      - data
+      - model
+      - object
+      title: ChunksResponse
+    CompletionsBody:
+      example:
+        context_filter:
+          docs_ids:
+          - docs_ids
+          - docs_ids
+        stream: false
+        system_prompt: system_prompt
+        include_sources: true
+        prompt: prompt
+        use_context: false
+      properties:
+        prompt:
+          title: Prompt
+          type: string
+        system_prompt:
+          nullable: true
+          type: string
+        use_context:
+          default: false
+          title: Use Context
+          type: boolean
+        context_filter:
+          $ref: '#/components/schemas/ContextFilter'
+        include_sources:
+          default: true
+          title: Include Sources
+          type: boolean
+        stream:
+          default: false
+          title: Stream
+          type: boolean
+      required:
+      - prompt
+      title: CompletionsBody
+    ContextFilter:
+      example:
+        docs_ids:
+        - docs_ids
+        - docs_ids
+      properties:
+        docs_ids:
+          items:
+            type: string
+          nullable: true
+      required:
+      - docs_ids
+      title: ContextFilter
+    Embedding:
+      example:
+        index: 0
+        embedding:
+        - 6.027456183070403
+        - 6.027456183070403
+        object: ""
+      properties:
+        index:
+          title: Index
+          type: integer
+        object: {}
+        embedding:
+          items:
+            type: number
+          type: array
+      required:
+      - embedding
+      - index
+      - object
+      title: Embedding
+    EmbeddingsBody:
+      example:
+        input: Input
+      properties:
+        input:
+          $ref: '#/components/schemas/Input'
+      required:
+      - input
+      title: EmbeddingsBody
+    EmbeddingsResponse:
+      example:
+        data:
+        - index: 0
+          embedding:
+          - 6.027456183070403
+          - 6.027456183070403
+          object: ""
+        - index: 0
+          embedding:
+          - 6.027456183070403
+          - 6.027456183070403
+          object: ""
+        model: ""
+        object: ""
+      properties:
+        object: {}
+        model: {}
+        data:
+          items:
+            $ref: '#/components/schemas/Embedding'
+          type: array
+      required:
+      - data
+      - model
+      - object
+      title: EmbeddingsResponse
+    HTTPValidationError:
+      example:
+        detail:
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+      title: HTTPValidationError
+    HealthResponse:
+      example:
+        status: ""
+      properties:
+        status: {}
+      title: HealthResponse
+    IngestResponse:
+      example:
+        data:
+        - doc_metadata: "{}"
+          doc_id: doc_id
+          object: ""
+        - doc_metadata: "{}"
+          doc_id: doc_id
+          object: ""
+        model: ""
+        object: ""
+      properties:
+        object: {}
+        model: {}
+        data:
+          items:
+            $ref: '#/components/schemas/IngestedDoc'
+          type: array
+      required:
+      - data
+      - model
+      - object
+      title: IngestResponse
+    IngestTextBody:
+      example:
+        file_name: file_name
+        text: text
+      properties:
+        file_name:
+          title: File Name
+          type: string
+        text:
+          title: Text
+          type: string
+      required:
+      - file_name
+      - text
+      title: IngestTextBody
+    IngestedDoc:
+      example:
+        doc_metadata: "{}"
+        doc_id: doc_id
+        object: ""
+      properties:
+        object: {}
+        doc_id:
+          title: Doc Id
+          type: string
+        doc_metadata:
+          nullable: true
+          type: object
+      required:
+      - doc_id
+      - doc_metadata
+      - object
+      title: IngestedDoc
+    OpenAIChoice:
+      description: |-
+        Response from AI.
+
+        Either the delta or the message will be present, but never both.
+        Sources used will be returned in case context retrieval was enabled.
+      example:
+        finish_reason: finish_reason
+        sources:
+        - score: 6.027456183070403
+          document:
+            doc_metadata: "{}"
+            doc_id: doc_id
+            object: ""
+          next_texts:
+          - next_texts
+          - next_texts
+          text: text
+          previous_texts:
+          - previous_texts
+          - previous_texts
+          object: ""
+        - score: 6.027456183070403
+          document:
+            doc_metadata: "{}"
+            doc_id: doc_id
+            object: ""
+          next_texts:
+          - next_texts
+          - next_texts
+          text: text
+          previous_texts:
+          - previous_texts
+          - previous_texts
+          object: ""
+        delta:
+          content: content
+        index: 1
+        message:
+          role: user
+          content: content
+      properties:
+        finish_reason:
+          nullable: true
+          type: string
+        delta:
+          $ref: '#/components/schemas/OpenAIDelta'
+        message:
+          $ref: '#/components/schemas/OpenAIMessage'
+        sources:
+          items:
+            $ref: '#/components/schemas/Chunk'
+          nullable: true
+        index:
+          default: 0
+          title: Index
+          type: integer
+      required:
+      - finish_reason
+      title: OpenAIChoice
+    OpenAICompletion:
+      description: |-
+        Clone of OpenAI Completion model.
+
+        For more information see: https://platform.openai.com/docs/api-reference/chat/object
+      example:
+        created: 0
+        model: ""
+        id: id
+        choices:
+        - finish_reason: finish_reason
+          sources:
+          - score: 6.027456183070403
+            document:
+              doc_metadata: "{}"
+              doc_id: doc_id
+              object: ""
+            next_texts:
+            - next_texts
+            - next_texts
+            text: text
+            previous_texts:
+            - previous_texts
+            - previous_texts
+            object: ""
+          - score: 6.027456183070403
+            document:
+              doc_metadata: "{}"
+              doc_id: doc_id
+              object: ""
+            next_texts:
+            - next_texts
+            - next_texts
+            text: text
+            previous_texts:
+            - previous_texts
+            - previous_texts
+            object: ""
+          delta:
+            content: content
+          index: 1
+          message:
+            role: user
+            content: content
+        - finish_reason: finish_reason
+          sources:
+          - score: 6.027456183070403
+            document:
+              doc_metadata: "{}"
+              doc_id: doc_id
+              object: ""
+            next_texts:
+            - next_texts
+            - next_texts
+            text: text
+            previous_texts:
+            - previous_texts
+            - previous_texts
+            object: ""
+          - score: 6.027456183070403
+            document:
+              doc_metadata: "{}"
+              doc_id: doc_id
+              object: ""
+            next_texts:
+            - next_texts
+            - next_texts
+            text: text
+            previous_texts:
+            - previous_texts
+            - previous_texts
+            object: ""
+          delta:
+            content: content
+          index: 1
+          message:
+            role: user
+            content: content
+        object: completion
+      properties:
+        id:
+          title: Id
+          type: string
+        object:
+          default: completion
+          enum:
+          - completion
+          - completion.chunk
+          title: Object
+          type: string
+        created:
+          title: Created
+          type: integer
+        model: {}
+        choices:
+          items:
+            $ref: '#/components/schemas/OpenAIChoice'
+          type: array
+      required:
+      - choices
+      - created
+      - id
+      - model
+      title: OpenAICompletion
+    OpenAIDelta:
+      description: A piece of completion that needs to be concatenated to get the
+        full message.
+      example:
+        content: content
+      properties:
+        content:
+          nullable: true
+          type: string
+      required:
+      - content
+      title: OpenAIDelta
+    OpenAIMessage:
+      description: |-
+        Inference result, with the source of the message.
+
+        Role could be the assistant or system
+        (providing a default response, not AI generated).
+      example:
+        role: user
+        content: content
+      properties:
+        role:
+          default: user
+          enum:
+          - assistant
+          - system
+          - user
+          title: Role
+          type: string
+        content:
+          nullable: true
+          type: string
+      required:
+      - content
+      title: OpenAIMessage
+    ValidationError:
+      example:
+        msg: msg
+        loc:
+        - ValidationError_loc_inner
+        - ValidationError_loc_inner
+        type: type
+      properties:
+        loc:
+          items:
+            $ref: '#/components/schemas/ValidationError_loc_inner'
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    Input:
+      anyOf:
+      - type: string
+      - items:
+          type: string
+      title: Input
+    ValidationError_loc_inner:
+      anyOf:
+      - type: string
+      - type: integer
