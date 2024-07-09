@@ -11,7 +11,7 @@ import (
 	"context"
 	"testing"
 
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+	openapiclient "github.com/RomanGod6/privategpt-go/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
